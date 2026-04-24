@@ -5,15 +5,6 @@
 namespace esphome {
 namespace epaper_spi {
 
-struct IT8951DevInfo {
-  uint16_t panel_width{0};
-  uint16_t panel_height{0};
-  uint16_t img_buf_addr_l{0};
-  uint16_t img_buf_addr_h{0};
-  uint16_t fw_version[8]{};
-  uint16_t lut_version[8]{};
-};
-
 // --- IT8951 Command defines ---
 
 // Packet types
@@ -44,6 +35,8 @@ static constexpr uint16_t IT8951_I80_CMD_DPY_BUF_AREA = 0x0037;
 static constexpr uint16_t IT8951_I80_CMD_VCOM = 0x0039;
 static constexpr uint16_t IT8951_I80_CMD_VCOM_READ = 0x0000;
 static constexpr uint16_t IT8951_I80_CMD_VCOM_WRITE = 0x0001;
+static constexpr uint16_t IT8951_I80_CMD_TEMP = 0x0040;
+static constexpr uint16_t IT8951_I80_CMD_VCOM_WRITE_ALT = 0x0002;
 
 // --- IT8951 Mode defines ---
 
@@ -59,9 +52,6 @@ static constexpr uint8_t IT8951_LDIMG_B_ENDIAN = 1;
 
 // Default VCOM value (mV)
 static constexpr uint16_t IT8951_DEFAULT_VCOM = 2300;
-
-// SPI probe frequency for IT8951 for configuration only.
-static constexpr uint32_t IT8951_SPI_PROBE_FREQUENCY = 1'000'000;
 
 /*-----------------------------------------------------------------------
  Refresh mode description
@@ -96,7 +86,7 @@ static constexpr uint32_t IT8951_SPI_PROBE_FREQUENCY = 1'000'000;
  The GLR16 mode is used in conjunction with an image preprocessing algorithm to
  update sparse content on a white background with reduced flash and reduced image
  artifacts. The GLR16 mode supports 16 graytones. If only the even pixel states
- are used (0, 2, 4, â€¦ 30), the mode will behave exactly as a traditional GL16
+ are used (0, 2, 4, … 30), the mode will behave exactly as a traditional GL16
  waveform mode. If a separately-supplied image preprocessing algorithm is used,
  the transitions invoked by the pixel states 29 and 31 are used to improve
  display quality. For the AF waveform, it is assured that the GLR16 waveform data
@@ -108,7 +98,7 @@ static constexpr uint32_t IT8951_SPI_PROBE_FREQUENCY = 1'000'000;
  update sparse content on a white background with reduced flash and reduced image
  artifacts. It is recommended to be used only with the full display update. The
  GLD16 mode supports 16 graytones. If only the even pixel states are used (0, 2,
- 4, â€¦ 30), the mode will behave exactly as a traditional GL16 waveform mode. If a
+ 4, … 30), the mode will behave exactly as a traditional GL16 waveform mode. If a
  separately-supplied image preprocessing algorithm is used, the transitions
  invoked by the pixel states 29 and 31 are used to refresh the background with a
  lighter flash compared to GC16 mode following a predetermined pixel map as
@@ -178,3 +168,4 @@ static constexpr uint16_t IT8951_LISAR = IT8951_MCSR_BASE_ADDR + 0x0008;
 
 }  // namespace epaper_spi
 }  // namespace esphome
+

@@ -38,6 +38,13 @@ bool EPaperBase::init_buffer_(size_t buffer_length) {
 }
 
 void EPaperBase::setup_pins_() const {
+  for (auto *enable_pin : this->enable_pins_) {
+    if (enable_pin == nullptr)
+      continue;
+    enable_pin->setup();  // OUTPUT
+    enable_pin->digital_write(true);
+  }
+
   if (this->dc_pin_ != nullptr) {
     this->dc_pin_->setup();  // OUTPUT
     this->dc_pin_->digital_write(false);
@@ -363,6 +370,9 @@ void EPaperBase::dump_config() {
   LOG_PIN("  Reset Pin: ", this->reset_pin_);
   LOG_PIN("  DC Pin: ", this->dc_pin_);
   LOG_PIN("  Busy Pin: ", this->busy_pin_);
+  for (auto *enable_pin : this->enable_pins_) {
+    LOG_PIN("  Enable Pin: ", enable_pin);
+  }
   LOG_PIN("  CS Pin: ", this->cs_);
   LOG_UPDATE_INTERVAL(this);
 }
