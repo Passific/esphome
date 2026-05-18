@@ -77,6 +77,19 @@ UPDATE_MODE_OPTIONS = {
 # Validator preserves case as written (matches existing user-facing strings).
 update_mode = cv.one_of(*UPDATE_MODE_OPTIONS, upper=False)
 
+
+def _force_temperature(value):
+    # The generic model has no default temperature, so ``cv.Optional(...,
+    # default=model.get_default(CONF_FORCE_TEMPERATURE))`` injects Python
+    # ``None`` into the config. ``cv.none`` only accepts the strings
+    # ``"none"``/``"None"`` (it rejects Python ``None``), so a plain
+    # ``cv.Any(cv.none, cv.int_range(...))`` would fail validation. Accept
+    # Python ``None`` here so the schema works for both the generic model
+    # (no default) and panels that supply an explicit integer default.
+    if value is None or (isinstance(value, str) and value.lower() == "none"):
+        return None
+    return cv.int_range(min=-40, max=85)(value)
+
 # Transform flag values mirror the C++ TRANSFORM_* constants.
 _TRANSFORM_NONE = 0
 _TRANSFORM_MIRROR_X = 1
@@ -227,7 +240,7 @@ def _model_schema(config):
             cv.Optional(
                 CONF_FORCE_TEMPERATURE,
                 default=model.get_default(CONF_FORCE_TEMPERATURE),
-            ): cv.Any(cv.none, cv.int_range(min=-40, max=85)),
+            ): _force_temperature,
             cv.Optional(
                 CONF_USE_LEGACY_DPY_AREA,
                 default=model.get_default(CONF_USE_LEGACY_DPY_AREA, False),
