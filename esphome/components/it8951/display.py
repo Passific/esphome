@@ -77,19 +77,6 @@ UPDATE_MODE_OPTIONS = {
 # Validator preserves case as written (matches existing user-facing strings).
 update_mode = cv.one_of(*UPDATE_MODE_OPTIONS, upper=False)
 
-
-def _force_temperature(value):
-    # The generic model has no default temperature, so ``cv.Optional(...,
-    # default=model.get_default(CONF_FORCE_TEMPERATURE))`` injects Python
-    # ``None`` into the config. ``cv.none`` only accepts the strings
-    # ``"none"``/``"None"`` (it rejects Python ``None``), so a plain
-    # ``cv.Any(cv.none, cv.int_range(...))`` would fail validation. Accept
-    # Python ``None`` here so the schema works for both the generic model
-    # (no default) and panels that supply an explicit integer default.
-    if value is None or (isinstance(value, str) and value.lower() == "none"):
-        return None
-    return cv.int_range(min=-40, max=85)(value)
-
 # Transform flag values mirror the C++ TRANSFORM_* constants.
 _TRANSFORM_NONE = 0
 _TRANSFORM_MIRROR_X = 1
@@ -237,10 +224,16 @@ def _model_schema(config):
                 CONF_VCOM_REGISTER,
                 default=model.get_default(CONF_VCOM_REGISTER, VCOM_REGISTER_DEFAULT),
             ): cv.one_of(*VCOM_REGISTER_OPTIONS, int=True),
-            cv.Optional(
-                CONF_FORCE_TEMPERATURE,
-                default=model.get_default(CONF_FORCE_TEMPERATURE),
-            ): _force_temperature,
+            **(
+                {
+                    cv.Optional(
+                        CONF_FORCE_TEMPERATURE,
+                        default=model.get_default(CONF_FORCE_TEMPERATURE),
+                    ): cv.int_range(min=-40, max=85)
+                }
+                if model.get_default(CONF_FORCE_TEMPERATURE) is not None
+                else {}
+            ),
             cv.Optional(
                 CONF_USE_LEGACY_DPY_AREA,
                 default=model.get_default(CONF_USE_LEGACY_DPY_AREA, False),
@@ -332,7 +325,7 @@ async def to_code(config):
     cg.add(var.set_sleep_when_done(config[CONF_SLEEP_WHEN_DONE]))
     cg.add(var.set_vcom(config[CONF_VCOM]))
     cg.add(var.set_vcom_register(config[CONF_VCOM_REGISTER]))
-    if config.get(CONF_FORCE_TEMPERATURE) is not None:
+    if CONF_FORCE_TEMPERATURE in config:
         cg.add(var.set_force_temperature(config[CONF_FORCE_TEMPERATURE]))
     cg.add(var.set_use_legacy_dpy_area(config[CONF_USE_LEGACY_DPY_AREA]))
     cg.add(var.set_force_1bpp(config[CONF_FORCE_1BPP]))
